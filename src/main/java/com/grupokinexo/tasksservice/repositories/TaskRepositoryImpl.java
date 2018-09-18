@@ -58,11 +58,13 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public void update(Task object) {
         Session session = sessionFactory.openSession();
+        Transaction tx = session.beginTransaction();
         Task taskToUpdate = getById(object.getId());
         taskToUpdate.setName(object.getName());
         taskToUpdate.setDescription(object.getDescription());
 
         session.update(object);
+        tx.commit();
         session.close();
     }
 

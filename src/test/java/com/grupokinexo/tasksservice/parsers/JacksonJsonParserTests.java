@@ -13,19 +13,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JacksonJsonParserTests {
+    private final int id = 2;
+    private final String name = "user name";
+    private String parsedString = String.format("{\"id\":%d,\"name\":\"%s\"}", id, name);
+
     @Test
     public void parseToObjectShouldReturnParsedObject() throws ParserException {
-        final int id = 2;
-        final String name = "user name";
-
         JacksonJsonParser parser = new JacksonJsonParser(new ObjectMapper());
-        String stringToParse = String.format("{ \"id\": %d, \"name\": \"%s\" }", id, name);
 
-        EntityToParse entity = parser.parseToObject(stringToParse, EntityToParse.class);
+        EntityToParse entity = parser.parseToObject(parsedString, EntityToParse.class);
+
         assertNotNull(entity);
         assertEquals(id, entity.getId());
         assertEquals(name, entity.getName());
@@ -51,18 +51,28 @@ public class JacksonJsonParserTests {
     }
 
     @Test
-    public void parseToStringShouldReturnParsedString() throws ParserException {
-        final int id = 2;
-        final String name = "user name";
+    public void parseToObjectShouldUseEmptyJsonWhenEntityIsNull() throws IOException, ParserException {
+        ObjectMapper mapper = mock(ObjectMapper.class);
+        when(mapper.registerModule(any())).thenReturn(mapper);
+        when(mapper.disable(any(SerializationFeature.class))).thenReturn(mapper);
+        when(mapper.readValue(anyString(), any(Class.class))).thenReturn(null);
 
+        JacksonJsonParser parser = new JacksonJsonParser(mapper);
+
+        parser.parseToObject(null, EntityToParse.class);
+        verify(mapper, times(1)).readValue("{}", EntityToParse.class);
+    }
+
+    @Test
+    public void parseToStringShouldReturnParsedString() throws ParserException {
         JacksonJsonParser parser = new JacksonJsonParser(new ObjectMapper());
-        String parsedString = String.format("{\"id\":%d,\"name\":\"%s\"}", id, name);
 
         EntityToParse entity = new EntityToParse();
         entity.setId(id);
         entity.setName(name);
 
         String result = parser.parseToString(entity);
+
         assertNotNull(result);
         assertEquals(parsedString, result);
     }

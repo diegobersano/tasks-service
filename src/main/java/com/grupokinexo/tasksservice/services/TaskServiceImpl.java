@@ -49,7 +49,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse edit(int id, TaskRequest task) {
-        return null;
+        Task newTask = new Task();
+        newTask.setId(id);
+        newTask.setName(task.getName());
+        newTask.setDescription(task.getMessage());
+
+        taskRepository.update(newTask);
+
+        return getById(id);
     }
 
     private TaskResponse Map(Task task) {
