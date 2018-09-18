@@ -25,7 +25,7 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
         taskRequest = new TaskRequest();
         taskRequest.setName("Name");
 
-        when(parser.parseToObject(anyString(), eq(TaskRequest.class))).thenReturn(taskRequest);
+        when(parser.parseToObject(any(), eq(TaskRequest.class))).thenReturn(taskRequest);
     }
 
     @Test

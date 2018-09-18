@@ -59,13 +59,7 @@ public class TasksController {
     }
 
     private String createTask(Request request, Response response) throws ParserException {
-        String body = request.body();
-
-        if (body == null || body.isEmpty()) {
-            body = "{}";
-        }
-
-        TaskRequest taskRequest = parser.parseToObject(body, TaskRequest.class);
+        TaskRequest taskRequest = parser.parseToObject(request.body(), TaskRequest.class);
 
         ValidationResult validationResult = validator.validate(taskRequest);
         if (!validationResult.isValid()) {
@@ -86,13 +80,16 @@ public class TasksController {
     }
 
     private String editTask(Request request, Response response) throws ParserException {
-        String body = request.body();
+        int taskId;
+        try {
+            taskId = Integer.parseInt(request.params(":id"));
+        } catch (NumberFormatException e) {
+            response.status(HttpStatus.SC_BAD_REQUEST);
 
-        if (body == null || body.isEmpty()) {
-            body = "{}";
+            return parser.parseToString(new ErrorDetail());
         }
 
-        TaskRequest taskRequest = parser.parseToObject(body, TaskRequest.class);
+        TaskRequest taskRequest = parser.parseToObject(request.body(), TaskRequest.class);
 
         ValidationResult validationResult = validator.validate(taskRequest);
         if (!validationResult.isValid()) {
@@ -102,15 +99,6 @@ public class TasksController {
 
             response.status(HttpStatus.SC_BAD_REQUEST);
             return parser.parseToString(errorDetail);
-        }
-
-        int taskId;
-        try {
-            taskId = Integer.parseInt(request.params(":id"));
-        } catch (NumberFormatException e) {
-            response.status(HttpStatus.SC_BAD_REQUEST);
-
-            return parser.parseToString(new ErrorDetail());
         }
 
         TaskResponse existingTask = taskService.getById(taskId);

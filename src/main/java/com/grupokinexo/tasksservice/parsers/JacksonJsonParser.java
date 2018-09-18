@@ -16,6 +16,10 @@ public class JacksonJsonParser implements Parser {
 
     @Override
     public <T> T parseToObject(String toParse, Class<T> type) throws ParserException {
+        if (toParse == null || toParse.isEmpty()) {
+            toParse = "{}";
+        }
+
         try {
             return jsonParser.readValue(toParse, type);
         } catch (Exception e) {
