@@ -63,12 +63,8 @@ public class TasksController {
 
         ValidationResult validationResult = validator.validate(taskRequest);
         if (!validationResult.isValid()) {
-            ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setMessage("The following fields (values) showed error during validation:");
-            errorDetail.addElements(validationResult.getErrors());
-
             response.status(HttpStatus.SC_BAD_REQUEST);
-            return parser.parseToString(errorDetail);
+            return parser.parseToString(getErrorResponse(validationResult));
         }
 
         TaskResponse taskResponse = taskService.create(taskRequest);
@@ -93,12 +89,8 @@ public class TasksController {
 
         ValidationResult validationResult = validator.validate(taskRequest);
         if (!validationResult.isValid()) {
-            ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setMessage("The following fields (values) showed error during validation:");
-            errorDetail.addElements(validationResult.getErrors());
-
             response.status(HttpStatus.SC_BAD_REQUEST);
-            return parser.parseToString(errorDetail);
+            return parser.parseToString(getErrorResponse(validationResult));
         }
 
         TaskResponse existingTask = taskService.getById(taskId);
@@ -114,5 +106,13 @@ public class TasksController {
         response.status(HttpStatus.SC_OK);
 
         return parser.parseToString(taskResponse);
+    }
+
+    private ErrorDetail getErrorResponse(ValidationResult validationResult) {
+        ErrorDetail errorDetail = new ErrorDetail();
+        errorDetail.setMessage("The following fields (values) showed error during validation:");
+        errorDetail.addElements(validationResult.getErrors());
+
+        return errorDetail;
     }
 }
