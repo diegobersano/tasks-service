@@ -1,16 +1,16 @@
 package com.grupokinexo.tasksservice.controllers;
 
+import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
-import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.validators.ValidationResult;
 import org.apache.http.HttpStatus;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class EditTaskControllerTests extends BaseTaskControllerTest {
@@ -18,26 +18,39 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
     private TaskResponse taskResponse;
     private TaskRequest taskRequest;
 
-    @Test
-    public void editShouldReturnBadRequestResponseWhenIdInRouteIsNotInteger() throws Exception {
-        when(request.params(":id")).thenReturn("string");
-        tasksController.editTask.handle(request, response);
+    @Before
+    public void setup() {
+        when(request.params(":id")).thenReturn(String.valueOf(taskId));
+    }
 
-        verify(parser, times(1)).parseToString(any(ErrorDetail.class));
-        verify(response, times(1)).status(HttpStatus.SC_BAD_REQUEST);
+    @Test
+    public void editShouldReturnBadRequestResponseWhenIdInRouteIsNotInteger() {
+        when(request.params(":id")).thenReturn("string");
+
+        BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.editTask.handle(request, response));
+        assertNotNull(badRequestApiException);
+        assertNotNull(badRequestApiException.getMessage());
+        assertNotNull(badRequestApiException.getErrorElements());
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getPropertyName().equals("id")));
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getDetail() != null && !x.getDetail().isEmpty()));
+
         verify(taskService, never()).edit(anyInt(), any(TaskRequest.class));
     }
 
     @Test
-    public void editShouldReturnBadRequestWhenValidationsAreNotPassed() throws Exception {
+    public void editShouldReturnBadRequestWhenValidationsAreNotPassed() {
+        final ErrorElement errorElement = new ErrorElement("prop", "detail");
         ValidationResult validationResult = new ValidationResult();
-        validationResult.addError(new ErrorElement("prop", "detail"));
+        validationResult.addError(errorElement);
         when(validator.validate(any())).thenReturn(validationResult);
 
-        tasksController.editTask.handle(request, response);
+        BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.editTask.handle(request, response));
+        assertNotNull(badRequestApiException);
+        assertNotNull(badRequestApiException.getMessage());
+        assertNotNull(badRequestApiException.getErrorElements());
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getPropertyName().equals(errorElement.getPropertyName())));
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getDetail().equals(errorElement.getDetail())));
 
-        verify(parser, times(1)).parseToString(any(ErrorDetail.class));
-        verify(response, times(1)).status(HttpStatus.SC_BAD_REQUEST);
         verify(taskService, never()).edit(anyInt(), any(TaskRequest.class));
     }
 
@@ -46,8 +59,12 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
         setupSuccessServiceExecution();
         when(taskService.getById(anyInt())).thenReturn(null);
 
-        tasksController.editTask.handle(request, response);
-        verify(response, times(1)).status(HttpStatus.SC_BAD_REQUEST);
+        BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.editTask.handle(request, response));
+        assertNotNull(badRequestApiException);
+        assertNotNull(badRequestApiException.getMessage());
+        assertNotNull(badRequestApiException.getErrorElements());
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getPropertyName().equals("id")));
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getDetail() != null && !x.getDetail().isEmpty()));
     }
 
     @Test
@@ -82,7 +99,6 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
         taskRequest = new TaskRequest();
         taskRequest.setName("Name");
 
-        when(request.params(":id")).thenReturn(String.valueOf(taskId));
         when(parser.parseToObject(any(), eq(TaskRequest.class))).thenReturn(taskRequest);
         when(validator.validate(any())).thenReturn(new ValidationResult());
         when(taskService.getById(anyInt())).thenReturn(taskResponse);

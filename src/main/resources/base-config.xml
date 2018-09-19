@@ -14,6 +14,11 @@
         <constructor-arg ref="taskService"/>
     </bean>
 
+    <!-- Exception handler -->
+    <bean id="exceptionHandler" class="com.grupokinexo.tasksservice.exceptions.DefaultExceptionHandler">
+        <constructor-arg ref="parser"/>
+    </bean>
+
     <!-- Validators -->
     <bean id="validationBootstrap" class="javax.validation.Validation$GenericBootstrapImpl"/>
     <bean id="validatorConfig" factory-bean="validationBootstrap" factory-method="configure"/>
