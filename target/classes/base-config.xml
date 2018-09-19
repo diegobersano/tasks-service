@@ -2,9 +2,13 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:context="http://www.springframework.org/schema/context"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
     <context:component-scan base-package="com.grupokinexo.tasksservice"/>
+
+    <context:property-placeholder location="classpath:application.properties"
+                                  ignore-unresolvable="true" ignore-resource-not-found="true"/>
 
     <!-- Controllers -->
     <bean id="tasksController"
@@ -37,6 +41,9 @@
     <!-- Services -->
     <bean id="taskService" class="com.grupokinexo.tasksservice.services.TaskServiceImpl">
         <constructor-arg ref="taskRepository"/>
+    </bean>
+    <bean id="userService" class="com.grupokinexo.tasksservice.services.UserServiceImpl">
+        <constructor-arg ref="usersApiClient"/>
     </bean>
 
     <!-- Repositories -->
@@ -75,5 +82,46 @@
 
     <bean id="txManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
         <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <cache:annotation-driven/>
+    <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+        <property name="caches">
+            <set>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+                      name="userToken"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+                      name="callerUsers"/>
+            </set>
+        </property>
+    </bean>
+
+    <bean id="usersApiClient" class="com.grupokinexo.tasksservice.clients.DefaultUsersApiClient">
+        <constructor-arg ref="parser"/>
+        <constructor-arg ref="cacheManager"/>
+        <constructor-arg ref="httpClient"/>
+        <constructor-arg value="${users.endpoint}"/>
+        <constructor-arg value="${users.auth.username}"/>
+        <constructor-arg value="${users.auth.password}"/>
+    </bean>
+
+    <bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig"
+          factory-method="custom">
+    </bean>
+
+    <bean id="requestConfig" factory-bean="requestConfigBuilder" factory-method="build"/>
+
+    <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder"
+          factory-method="create">
+        <property name="defaultRequestConfig" ref="requestConfig"/>
+    </bean>
+
+    <bean id="httpClient" factory-bean="httpClientBuilder" factory-method="build"/>
+
+    <bean id="authorizationHandler" class="com.grupokinexo.tasksservice.security.DefaultAuthorizationHandler">
+        <constructor-arg ref="userService"/>
+        <constructor-arg ref="parser"/>
+        <constructor-arg ref="cacheManager"/>
+        <constructor-arg value="${security.header}"/>
     </bean>
 </beans>
