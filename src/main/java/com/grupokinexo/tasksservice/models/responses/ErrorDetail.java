@@ -30,6 +30,8 @@ public class ErrorDetail {
     }
 
     public void addElements(Collection<ErrorElement> errors) {
-        this.elements.addAll(errors);
+        if (errors != null && !errors.isEmpty()) {
+            this.elements.addAll(errors);
+        }
     }
 }

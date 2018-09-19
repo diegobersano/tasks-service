@@ -1,5 +1,6 @@
 package com.grupokinexo.tasksservice.controllers;
 
+import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
@@ -9,8 +10,7 @@ import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class CreateTaskControllerTests extends BaseTaskControllerTest {
@@ -29,19 +29,22 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void createShouldReturnBadRequestWhenValidatorReturnsErrors() throws Exception {
+    public void createShouldThrowBadRequestExceptionWhenValidatorReturnsErrors() {
         setupValidationErrorsExecution();
 
-        tasksController.createTask.handle(request, response);
-
-        verify(response, times(1)).status(HttpStatus.SC_BAD_REQUEST);
+        BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.createTask.handle(request, response));
+        assertNotNull(badRequestApiException);
+        assertNotNull(badRequestApiException.getMessage());
+        assertNotNull(badRequestApiException.getErrorElements());
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getPropertyName().equals("propName")));
+        assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getDetail() != null && !x.getDetail().isEmpty()));
     }
 
     @Test
-    public void createShouldNotCallCreateServiceWhenValidatorReturnsErrors() throws Exception {
+    public void createShouldNotCallCreateServiceWhenValidatorReturnsErrors() {
         setupValidationErrorsExecution();
 
-        tasksController.createTask.handle(request, response);
+        assertThrows(Exception.class, () -> tasksController.createTask.handle(request, response));
 
         verify(taskService, never()).create(any(TaskRequest.class));
     }
