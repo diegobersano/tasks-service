@@ -3,8 +3,12 @@ package com.grupokinexo.tasksservice.parsers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
+
+import java.util.Collection;
+import java.util.List;
 
 public class JacksonJsonParser implements Parser {
     private final ObjectMapper jsonParser;
@@ -16,12 +20,22 @@ public class JacksonJsonParser implements Parser {
 
     @Override
     public <T> T parseToObject(String toParse, Class<T> type) throws ParserException {
-        if (toParse == null || toParse.isEmpty()) {
-            toParse = "{}";
-        }
+        toParse = normalizeInput(toParse);
 
         try {
             return jsonParser.readValue(toParse, type);
+        } catch (Exception e) {
+            throw new ParserException(e.getMessage());
+        }
+    }
+
+    @Override
+    public <T> Collection<T> parseToListObject(String toParse, Class<T> type) throws ParserException {
+        toParse = normalizeInput(toParse);
+
+        try {
+            CollectionType javaType = jsonParser.getTypeFactory().constructCollectionType(List.class, type);
+            return jsonParser.readValue(toParse, javaType);
         } catch (Exception e) {
             throw new ParserException(e.getMessage());
         }
@@ -34,5 +48,13 @@ public class JacksonJsonParser implements Parser {
         } catch (JsonProcessingException e) {
             throw new ParserException(e.getMessage());
         }
+    }
+
+    private String normalizeInput(String input) {
+        if (input == null || input.isEmpty()) {
+            input = "{}";
+        }
+
+        return input;
     }
 }
