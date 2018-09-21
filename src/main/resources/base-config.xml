@@ -98,25 +98,28 @@
 
     <bean id="usersApiClient" class="com.grupokinexo.tasksservice.clients.DefaultUsersApiClient">
         <constructor-arg ref="parser"/>
-        <constructor-arg ref="cacheManager"/>
         <constructor-arg ref="httpClient"/>
+        <constructor-arg ref="httpHelper"/>
         <constructor-arg value="${users.endpoint}"/>
+        <constructor-arg ref="userApiAuthRequest"/>
+    </bean>
+
+    <bean id="userApiAuthRequest" class="com.grupokinexo.tasksservice.clients.UserApiTokenRequest">
         <constructor-arg value="${users.auth.username}"/>
         <constructor-arg value="${users.auth.password}"/>
     </bean>
 
+    <!-- Http client -->
     <bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig"
           factory-method="custom">
     </bean>
-
     <bean id="requestConfig" factory-bean="requestConfigBuilder" factory-method="build"/>
-
     <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder"
           factory-method="create">
         <property name="defaultRequestConfig" ref="requestConfig"/>
     </bean>
-
     <bean id="httpClient" factory-bean="httpClientBuilder" factory-method="build"/>
+    <bean id="httpHelper" class="com.grupokinexo.tasksservice.helpers.HttpHelperImpl"/>
 
     <bean id="authorizationHandler" class="com.grupokinexo.tasksservice.security.DefaultAuthorizationHandler">
         <constructor-arg ref="userService"/>

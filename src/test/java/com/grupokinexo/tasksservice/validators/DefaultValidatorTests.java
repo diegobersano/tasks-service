@@ -54,6 +54,6 @@ public class DefaultValidatorTests {
         ValidationResult validationResult = defaultValidator.validate(1);
         assertNotNull(validationResult);
         assertTrue(validationResult.isValid());
-        assertEquals(0, validationResult.getErrors().size());
+        assertTrue(validationResult.getErrors().isEmpty());
     }
 }

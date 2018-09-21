@@ -1,6 +1,7 @@
 package com.grupokinexo.tasksservice.clients;
 
 import com.grupokinexo.tasksservice.exceptions.ParserException;
+import com.grupokinexo.tasksservice.helpers.HttpHelper;
 import com.grupokinexo.tasksservice.models.external.User;
 import com.grupokinexo.tasksservice.parsers.Parser;
 import org.apache.http.HttpResponse;
@@ -9,51 +10,35 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 
 import java.io.IOException;
 import java.util.Collection;
 
 public class DefaultUsersApiClient implements UsersApiClient {
     private final Parser parser;
-    private final CacheManager cacheManager;
     private final HttpClient httpClient;
     private final String usersApiUrl;
-    private final String usersApiUserName;
-    private final String usersApiPassword;
+    private final UserApiTokenRequest tokenRequest;
+    private final HttpHelper httpHelper;
 
-    DefaultUsersApiClient(Parser parser, CacheManager cacheManager, HttpClient httpClient, String usersApiUrl,
-                          String usersApiUserName, String usersApiPassword) {
+    DefaultUsersApiClient(Parser parser, HttpClient httpClient, HttpHelper httpHelper, String usersApiUrl, UserApiTokenRequest tokenRequest) {
         this.parser = parser;
-        this.cacheManager = cacheManager;
         this.httpClient = httpClient;
+        this.httpHelper = httpHelper;
         this.usersApiUrl = usersApiUrl;
-        this.usersApiUserName = usersApiUserName;
-        this.usersApiPassword = usersApiPassword;
+        this.tokenRequest = tokenRequest;
     }
 
-    String getToken() throws ParserException, IOException {
-        Cache cache = cacheManager.getCache("userToken");
-        assert cache != null;
-
-        UserApiTokenResponse tokenResponse = cache.get("token", UserApiTokenResponse.class);
-        if (tokenResponse != null) {
-            return tokenResponse.getToken();
-        }
-
+    public String getToken() throws ParserException, IOException {
         String url = usersApiUrl + "/login";
 
         HttpPost request = new HttpPost(url);
 
-        String parsedRequest = parser.parseToString(new UserApiTokenRequest(usersApiUserName, usersApiPassword));
+        String parsedRequest = parser.parseToString(tokenRequest);
         request.setEntity(new StringEntity(parsedRequest));
         HttpResponse response = httpClient.execute(request);
-        String content = EntityUtils.toString(response.getEntity());
-        tokenResponse = parser.parseToObject(content, UserApiTokenResponse.class);
-
-        cache.put("token", tokenResponse);
+        String content = httpHelper.getBody(response);
+        UserApiTokenResponse tokenResponse = parser.parseToObject(content, UserApiTokenResponse.class);
 
         return tokenResponse.getToken();
     }
@@ -65,7 +50,7 @@ public class DefaultUsersApiClient implements UsersApiClient {
         HttpGet request = new HttpGet(url);
         HttpResponse response = execute(request);
 
-        String content = EntityUtils.toString(response.getEntity());
+        String content = httpHelper.getBody(response);
         return parser.parseToObject(content, User.class);
     }
 
@@ -76,7 +61,7 @@ public class DefaultUsersApiClient implements UsersApiClient {
         HttpGet request = new HttpGet(url);
         HttpResponse response = execute(request);
 
-        String content = EntityUtils.toString(response.getEntity());
+        String content = httpHelper.getBody(response);
         return parser.parseToListObject(content, User.class);
     }
 
