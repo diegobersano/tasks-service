@@ -3,25 +3,22 @@ package com.grupokinexo.tasksservice.parsers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-public class JacksonJsonParserTests {
+class JacksonJsonParserTests {
     private final int id = 2;
     private final String name = "user name";
     private String parsedString = String.format("{\"id\":%d,\"name\":\"%s\"}", id, name);
 
     @Test
-    public void parseToObjectShouldReturnParsedObject() throws ParserException {
+    void parseToObjectShouldReturnParsedObject() throws ParserException {
         JacksonJsonParser parser = new JacksonJsonParser(new ObjectMapper());
 
         EntityToParse entity = parser.parseToObject(parsedString, EntityToParse.class);
@@ -31,11 +28,8 @@ public class JacksonJsonParserTests {
         assertEquals(name, entity.getName());
     }
 
-    @Rule
-    public ExpectedException exception = ExpectedException.none();
-
     @Test
-    public void parseToObjectShouldThrowParserExceptionIfExceptionIsThrown() throws IOException, ParserException {
+    void parseToObjectShouldThrowParserExceptionIfExceptionIsThrown() throws IOException {
         ObjectMapper mapper = mock(ObjectMapper.class);
         when(mapper.registerModule(any())).thenReturn(mapper);
         when(mapper.disable(any(SerializationFeature.class))).thenReturn(mapper);
@@ -44,14 +38,12 @@ public class JacksonJsonParserTests {
 
         JacksonJsonParser parser = new JacksonJsonParser(mapper);
 
-        exception.expect(ParserException.class);
-        exception.expectMessage(ioException.getMessage());
-
-        parser.parseToObject("", EntityToParse.class);
+        ParserException exception = assertThrows(ParserException.class, () -> parser.parseToObject("", EntityToParse.class));
+        assertEquals(ioException.getMessage(), exception.getMessage());
     }
 
     @Test
-    public void parseToObjectShouldUseEmptyJsonWhenEntityIsNull() throws IOException, ParserException {
+    void parseToObjectShouldUseEmptyJsonWhenEntityIsNull() throws IOException, ParserException {
         ObjectMapper mapper = mock(ObjectMapper.class);
         when(mapper.registerModule(any())).thenReturn(mapper);
         when(mapper.disable(any(SerializationFeature.class))).thenReturn(mapper);
@@ -64,7 +56,7 @@ public class JacksonJsonParserTests {
     }
 
     @Test
-    public void parseToStringShouldReturnParsedString() throws ParserException {
+    void parseToStringShouldReturnParsedString() throws ParserException {
         JacksonJsonParser parser = new JacksonJsonParser(new ObjectMapper());
 
         EntityToParse entity = new EntityToParse();

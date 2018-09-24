@@ -2,6 +2,7 @@ package com.grupokinexo.tasksservice.controllers;
 
 import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
+import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
 import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
@@ -17,10 +18,11 @@ import spark.Route;
 
 import java.util.List;
 
-public class TasksController {
+public class TasksController implements BaseController {
     private final Parser parser;
     private final Validator validator;
     private final TaskService taskService;
+    private int currentUserId;
 
     TasksController(Validator validator, Parser parser, TaskService taskService) {
         this.parser = parser;
@@ -39,7 +41,7 @@ public class TasksController {
         return parser.parseToString(result);
     }
 
-    private String getById(Request request, Response response) throws ParserException, BadRequestApiException {
+    private String getById(Request request, Response response) throws ParserException, BadRequestApiException, UnauthorizedException {
         int taskId = getTaskIdByRoute(request);
 
         TaskResponse task = taskService.getById(taskId);
@@ -47,6 +49,10 @@ public class TasksController {
         if (task == null) {
             response.status(HttpStatus.SC_NOT_FOUND);
             return parser.parseToString(new ErrorDetail());
+        }
+
+        if (task.getCreatorId() != currentUserId) {
+            throw new UnauthorizedException("The user is not the owner of the task");
         }
 
         response.status(HttpStatus.SC_OK);
@@ -61,6 +67,7 @@ public class TasksController {
             throw new BadRequestApiException(validationResult);
         }
 
+        taskRequest.setCurrentUserId(currentUserId);
         TaskResponse taskResponse = taskService.create(taskRequest);
 
         response.status(HttpStatus.SC_CREATED);
@@ -69,7 +76,7 @@ public class TasksController {
         return parser.parseToString(taskResponse);
     }
 
-    private String editTask(Request request, Response response) throws ParserException, BadRequestApiException {
+    private String editTask(Request request, Response response) throws ParserException, BadRequestApiException, UnauthorizedException {
         int taskId = getTaskIdByRoute(request);
 
         TaskRequest taskRequest = parser.parseToObject(request.body(), TaskRequest.class);
@@ -85,6 +92,11 @@ public class TasksController {
             throw new BadRequestApiException(new ErrorElement("id", "There is not a task with the identifier"));
         }
 
+        if (existingTask.getCreatorId() != currentUserId) {
+            throw new UnauthorizedException("The user is not the owner of the task");
+        }
+
+        taskRequest.setCurrentUserId(currentUserId);
         TaskResponse taskResponse = taskService.edit(existingTask.getId(), taskRequest);
         response.status(HttpStatus.SC_OK);
         return parser.parseToString(taskResponse);
@@ -96,5 +108,10 @@ public class TasksController {
         } catch (NumberFormatException e) {
             throw new BadRequestApiException(new ErrorElement("id", "The format of the task identifier is not valid"));
         }
+    }
+
+    @Override
+    public void setCurrentUser(int id) {
+        currentUserId = id;
     }
 }

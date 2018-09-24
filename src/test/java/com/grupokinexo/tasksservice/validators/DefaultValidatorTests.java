@@ -1,6 +1,6 @@
 package com.grupokinexo.tasksservice.validators;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Path;
@@ -13,9 +13,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class DefaultValidatorTests {
+class DefaultValidatorTests {
     @Test
-    public void validateShouldReturnErrorsWhenValidationFail() {
+    void validateShouldReturnErrorsWhenValidationFail() {
         final String errorMessage = "error message";
         final String propertyName = "prop name";
 
@@ -44,7 +44,7 @@ public class DefaultValidatorTests {
     }
 
     @Test
-    public void validateShouldReturnEmptyErrorWhenValidationPass() {
+    void validateShouldReturnEmptyErrorWhenValidationPass() {
         Set<ConstraintViolation<Object>> errors = new HashSet<>();
         Validator validator = mock(Validator.class);
         when(validator.validate(any())).thenReturn(errors);

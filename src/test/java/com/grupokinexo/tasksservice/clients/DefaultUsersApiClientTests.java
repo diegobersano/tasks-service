@@ -20,7 +20,8 @@ import java.util.Collection;
 import java.util.Optional;
 
 import static com.nitorcreations.Matchers.reflectEquals;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class DefaultUsersApiClientTests {

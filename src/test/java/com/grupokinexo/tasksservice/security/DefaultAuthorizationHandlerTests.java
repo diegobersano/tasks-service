@@ -4,8 +4,8 @@ import com.grupokinexo.tasksservice.models.external.User;
 import com.grupokinexo.tasksservice.parsers.Parser;
 import com.grupokinexo.tasksservice.services.UserService;
 import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import spark.HaltException;
@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-public class DefaultAuthorizationHandlerTests {
+class DefaultAuthorizationHandlerTests {
     private final String headerName = "X-Caller-Id";
     private UserService userService;
     private Parser parser;
@@ -26,8 +26,8 @@ public class DefaultAuthorizationHandlerTests {
     private Response response;
     private Request request;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         userService = mock(UserService.class);
         parser = mock(Parser.class);
         cacheManager = mock(CacheManager.class);
@@ -42,7 +42,7 @@ public class DefaultAuthorizationHandlerTests {
     }
 
     @Test
-    public void authorizeShouldGetHeaderFromRequest() {
+    void authorizeShouldGetHeaderFromRequest() {
         when(request.headers(anyString())).thenReturn("1");
         when(userService.getById(anyInt())).thenReturn(new User());
 
@@ -52,7 +52,7 @@ public class DefaultAuthorizationHandlerTests {
     }
 
     @Test
-    public void authorizeShouldThrowHaltExceptionWhenHeaderIsNotPresent() {
+    void authorizeShouldThrowHaltExceptionWhenHeaderIsNotPresent() {
         when(request.headers(anyString())).thenReturn(null);
         HaltException e = assertThrows(HaltException.class, () -> handler.authorize(request, response));
         assertEquals(HttpStatus.SC_UNAUTHORIZED, e.statusCode());
@@ -61,7 +61,7 @@ public class DefaultAuthorizationHandlerTests {
     }
 
     @Test
-    public void authorizeShouldThrowHaltExceptionWhenHeaderDoesNotHaveNumberFormat() {
+    void authorizeShouldThrowHaltExceptionWhenHeaderDoesNotHaveNumberFormat() {
         when(request.headers(anyString())).thenReturn("string value");
         HaltException e = assertThrows(HaltException.class, () -> handler.authorize(request, response));
         assertEquals(HttpStatus.SC_UNAUTHORIZED, e.statusCode());
@@ -70,7 +70,7 @@ public class DefaultAuthorizationHandlerTests {
     }
 
     @Test
-    public void authorizeShouldThrowHaltExceptionIfUserDoesNotExists() {
+    void authorizeShouldThrowHaltExceptionIfUserDoesNotExists() {
         final int callerId = 1;
         when(request.headers(anyString())).thenReturn(String.valueOf(callerId));
         when(userService.getById(anyInt())).thenReturn(null);
@@ -82,7 +82,7 @@ public class DefaultAuthorizationHandlerTests {
     }
 
     @Test
-    public void authorizeShouldNotThrowExceptionIfUserExists() {
+    void authorizeShouldNotThrowExceptionIfUserExists() {
         final int callerId = 1;
         when(request.headers(anyString())).thenReturn(String.valueOf(callerId));
         when(userService.getById(anyInt())).thenReturn(new User());

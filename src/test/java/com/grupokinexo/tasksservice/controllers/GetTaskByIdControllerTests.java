@@ -2,23 +2,30 @@ package com.grupokinexo.tasksservice.controllers;
 
 import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
+import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
 import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import org.apache.http.HttpStatus;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
+class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     private final int taskId = 11;
     private final String parsedResponse = "parsedTaskResponse";
 
     private TaskResponse taskResponse;
 
+    @BeforeEach
+    void setup() {
+        taskResponse = new TaskResponse();
+    }
+
     @Test
-    public void getShouldReturnOkResponseWhenTaskExists() throws Exception {
+    void getShouldReturnOkResponseWhenTaskExists() throws Exception {
         setupSuccessServiceExecution();
 
         tasksController.getById.handle(request, response);
@@ -26,7 +33,7 @@ public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void getShouldReturnParsedTaskReturnedByService() throws Exception {
+    void getShouldReturnParsedTaskReturnedByService() throws Exception {
         setupSuccessServiceExecution();
 
         String result = (String) tasksController.getById.handle(request, response);
@@ -38,7 +45,7 @@ public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void getShouldReturnNotFoundResponseWhenTaskDoesNotExist() throws Exception {
+    void getShouldReturnNotFoundResponseWhenTaskDoesNotExist() throws Exception {
         setupNotFoundServiceExecution();
         tasksController.getById.handle(request, response);
 
@@ -46,7 +53,7 @@ public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void getShouldReturnErrorResponseWhenTaskDoesNotExists() throws Exception {
+    void getShouldReturnErrorResponseWhenTaskDoesNotExists() throws Exception {
         final String errorMessage = "errorMessage";
 
         setupNotFoundServiceExecution();
@@ -61,7 +68,7 @@ public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void getShouldThrowBadRequestExceptionWhenTheIdInRouteIsNotAnInteger() {
+    void getShouldThrowBadRequestExceptionWhenTheIdInRouteIsNotAnInteger() {
         when(request.params(":id")).thenReturn("string");
 
         BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.getById.handle(request, response));
@@ -72,6 +79,16 @@ public class GetTaskByIdControllerTests extends BaseTaskControllerTest {
         assertTrue(badRequestApiException.getErrorElements().stream().allMatch(x -> x.getDetail() != null && !x.getDetail().isEmpty()));
 
         verify(taskService, never()).getById(anyInt());
+    }
+
+    @Test
+    void getShouldThrowUnauthorizedExceptionIfCurrentUserDoesNotMatchWithTheCreatorOfTheTask() throws ParserException {
+        final int creatorId = 12;
+        setupSuccessServiceExecution();
+        tasksController.setCurrentUser(creatorId * 2);
+        taskResponse.setCreatorId(creatorId);
+
+        assertThrows(UnauthorizedException.class, () -> tasksController.getById.handle(request, response));
     }
 
     private void setupSuccessServiceExecution() throws ParserException {

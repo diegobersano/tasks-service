@@ -17,17 +17,27 @@ public class DefaultExceptionHandler implements ExceptionHandler {
     public void manageException(Exception exception, Request request, Response response) {
         if (exception instanceof BadRequestApiException) {
             BadRequestApiException badRequestApiException = (BadRequestApiException) exception;
-            ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setMessage(badRequestApiException.getMessage());
+            ErrorDetail errorDetail = new ErrorDetail(badRequestApiException.getMessage());
             errorDetail.addElements(badRequestApiException.getErrorElements());
 
-            try {
-                response.body(parser.parseToString(errorDetail));
-            } catch (ParserException e) {
-                response.body("{}");
-            }
+            setResponseBody(response, errorDetail);
 
             response.status(HttpStatus.SC_BAD_REQUEST);
+        } else if (exception instanceof UnauthorizedException) {
+            UnauthorizedException unauthorizedException = (UnauthorizedException) exception;
+            ErrorDetail errorDetail = new ErrorDetail(unauthorizedException.getMessage());
+
+            setResponseBody(response, errorDetail);
+
+            response.status(HttpStatus.SC_FORBIDDEN);
+        }
+    }
+
+    private void setResponseBody(Response response, ErrorDetail errorDetail) {
+        try {
+            response.body(parser.parseToString(errorDetail));
+        } catch (ParserException e) {
+            response.body("{}");
         }
     }
 }
