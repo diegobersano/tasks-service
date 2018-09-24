@@ -4,30 +4,30 @@ import com.grupokinexo.tasksservice.clients.DefaultUsersApiClient;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.helpers.BeanHelper;
 import com.grupokinexo.tasksservice.models.external.User;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ExternalUsersApiClientTests {
+class ExternalUsersApiClientTests {
     private DefaultUsersApiClient client;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         client = BeanHelper.getBean("usersApiClient", DefaultUsersApiClient.class);
     }
 
     @Test
-    public void getTokenShouldReturnValidAuthenticationToken() throws IOException, ParserException {
+    void getTokenShouldReturnValidAuthenticationToken() throws IOException, ParserException {
         String token = client.getToken();
         assertNotNull(token);
         assertTrue(token.startsWith("Bearer"));
     }
 
     @Test
-    public void getClientByIdShouldReturnValidUser() throws IOException, ParserException {
+    void getClientByIdShouldReturnValidUser() throws IOException, ParserException {
         final int userId = 1;
         User user = client.getById(userId);
         assertNotNull(user);

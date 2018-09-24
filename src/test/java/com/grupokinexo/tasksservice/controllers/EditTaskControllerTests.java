@@ -2,29 +2,30 @@ package com.grupokinexo.tasksservice.controllers;
 
 import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
+import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.validators.ValidationResult;
 import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class EditTaskControllerTests extends BaseTaskControllerTest {
+class EditTaskControllerTests extends BaseTaskControllerTest {
     private final int taskId = 9;
     private TaskResponse taskResponse;
     private TaskRequest taskRequest;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         when(request.params(":id")).thenReturn(String.valueOf(taskId));
     }
 
     @Test
-    public void editShouldReturnBadRequestResponseWhenIdInRouteIsNotInteger() {
+    void editShouldReturnBadRequestResponseWhenIdInRouteIsNotInteger() {
         when(request.params(":id")).thenReturn("string");
 
         BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.editTask.handle(request, response));
@@ -38,7 +39,7 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void editShouldReturnBadRequestWhenValidationsAreNotPassed() {
+    void editShouldReturnBadRequestWhenValidationsAreNotPassed() {
         final ErrorElement errorElement = new ErrorElement("prop", "detail");
         ValidationResult validationResult = new ValidationResult();
         validationResult.addError(errorElement);
@@ -55,7 +56,7 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void editShouldReturnBadRequestResponseWhenTheTaskToEditDoesNotExists() throws Exception {
+    void editShouldReturnBadRequestResponseWhenTheTaskToEditDoesNotExists() throws Exception {
         setupSuccessServiceExecution();
         when(taskService.getById(anyInt())).thenReturn(null);
 
@@ -68,7 +69,7 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void editShouldReturnOkResponseWhenValidationsArePassed() throws Exception {
+    void editShouldReturnOkResponseWhenValidationsArePassed() throws Exception {
         setupSuccessServiceExecution();
 
         tasksController.editTask.handle(request, response);
@@ -76,7 +77,7 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void editShouldCallServiceWhenValidationsArePassed() throws Exception {
+    void editShouldCallServiceWhenValidationsArePassed() throws Exception {
         setupSuccessServiceExecution();
 
         when(taskService.edit(anyInt(), any(TaskRequest.class))).thenReturn(taskResponse);
@@ -89,6 +90,17 @@ public class EditTaskControllerTests extends BaseTaskControllerTest {
 
         verify(taskService, times(1)).edit(taskId, taskRequest);
         verify(parser, times(1)).parseToString(taskResponse);
+    }
+
+    @Test
+    void editShouldThrowUnauthorizedExceptionIfCurrentUserDoesNotMatchWithTheCreatorOfTheTask() throws ParserException {
+        final int creatorId = 91;
+
+        setupSuccessServiceExecution();
+        tasksController.setCurrentUser(creatorId);
+        taskResponse.setCreatorId(creatorId + 2);
+
+        assertThrows(UnauthorizedException.class, () -> tasksController.editTask.handle(request, response));
     }
 
     private void setupSuccessServiceExecution() throws ParserException {

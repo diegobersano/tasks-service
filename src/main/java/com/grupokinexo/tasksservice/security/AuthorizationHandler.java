@@ -4,5 +4,5 @@ import spark.Request;
 import spark.Response;
 
 public interface AuthorizationHandler {
-    void authorize(Request request, Response response);
+    Integer authorize(Request request, Response response);
 }
