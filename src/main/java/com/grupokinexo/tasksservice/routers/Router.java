@@ -31,7 +31,10 @@ public class Router implements SparkApplication {
         });
 
         Spark.exception(Exception.class, exceptionHandler::manageException);
-        Spark.before(authorizationHandler::authorize);
+        Spark.before((request, response) -> {
+            int userId = authorizationHandler.authorize(request, response);
+            tasksController.setCurrentUser(userId);
+        });
     }
 
     public void destroy() {

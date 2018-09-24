@@ -10,19 +10,23 @@ public class Task {
     @Id
     @Column(name = "Id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    int id;
+    private int id;
 
     @NotNull
     @Column(name = "Name", length = 100)
-    String name;
+    private String name;
 
     @NotNull
     @Column(name = "Description", length = 100)
-    String description;
+    private String description;
 
     @NotNull
     @Column(name = "CreatedOn")
-    OffsetDateTime createdOn;
+    private OffsetDateTime createdOn;
+
+    @NotNull
+    @Column(name = "CreatorId")
+    private int creatorId;
 
     public int getId() {
         return id;
@@ -54,5 +58,13 @@ public class Task {
 
     public void setCreatedOn(OffsetDateTime createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public int getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(int creatorId) {
+        this.creatorId = creatorId;
     }
 }

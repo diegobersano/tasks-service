@@ -20,6 +20,7 @@ public class TaskServiceImpl implements TaskService {
         Task newTask = new Task();
         newTask.setName(task.getName());
         newTask.setDescription(task.getMessage());
+        newTask.setCreatorId(task.getCurrentUserId());
 
         int createdId = taskRepository.add(newTask);
 
@@ -49,23 +50,22 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskResponse edit(int id, TaskRequest task) {
-        Task newTask = new Task();
-        newTask.setId(id);
-        newTask.setName(task.getName());
-        newTask.setDescription(task.getMessage());
+        Task taskToEdit = taskRepository.getById(id);
+        taskToEdit.setName(task.getName());
+        taskToEdit.setDescription(task.getMessage());
 
-        taskRepository.update(newTask);
+        taskRepository.update(taskToEdit);
 
         return getById(id);
     }
 
     private TaskResponse Map(Task task) {
-
         TaskResponse result = new TaskResponse();
         result.setId(task.getId());
         result.setName(task.getName());
         result.setDescription(task.getDescription());
         result.setCreatedOn(task.getCreatedOn());
+        result.setCreatorId(task.getCreatorId());
 
         return result;
     }

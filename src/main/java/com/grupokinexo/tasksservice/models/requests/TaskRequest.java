@@ -1,5 +1,6 @@
 package com.grupokinexo.tasksservice.models.requests;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.validation.constraints.NotNull;
@@ -15,6 +16,9 @@ public class TaskRequest {
     @Size(min = 1, max = 100)
     private String message;
 
+    @JsonIgnore
+    private int currentUserId;
+
     public String getName() {
         return name;
     }
@@ -29,5 +33,13 @@ public class TaskRequest {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public int getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(int currentUserId) {
+        this.currentUserId = currentUserId;
     }
 }

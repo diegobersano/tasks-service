@@ -3,8 +3,8 @@ package com.grupokinexo.tasksservice.services;
 import com.grupokinexo.tasksservice.clients.UsersApiClient;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.models.external.User;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,18 +14,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
-public class UserServiceImplTests {
+class UserServiceImplTests {
     private UsersApiClient apiClient;
     private UserServiceImpl service;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         apiClient = mock(UsersApiClient.class);
         service = new UserServiceImpl(apiClient);
     }
 
     @Test
-    public void getByIdShouldCallApiClient() throws IOException, ParserException {
+    void getByIdShouldCallApiClient() throws IOException, ParserException {
         final int userId = 91;
         when(apiClient.getById(anyInt())).thenReturn(new User());
 
@@ -35,7 +35,7 @@ public class UserServiceImplTests {
     }
 
     @Test
-    public void getByIdShouldReturnApiClientResponse() throws IOException, ParserException {
+    void getByIdShouldReturnApiClientResponse() throws IOException, ParserException {
         final User user = new User();
         user.setId(12);
 
@@ -47,7 +47,7 @@ public class UserServiceImplTests {
     }
 
     @Test
-    public void getByIdShouldReturnNullWhenApiClientThrowsException() throws IOException, ParserException {
+    void getByIdShouldReturnNullWhenApiClientThrowsException() throws IOException, ParserException {
         when(apiClient.getById(anyInt())).thenThrow(new IOException());
 
         User result = service.getById(1);
@@ -55,7 +55,7 @@ public class UserServiceImplTests {
     }
 
     @Test
-    public void searchShouldCallApiClient() throws IOException, ParserException {
+    void searchShouldCallApiClient() throws IOException, ParserException {
         when(apiClient.getAll()).thenReturn(null);
 
         service.search();
@@ -64,7 +64,7 @@ public class UserServiceImplTests {
     }
 
     @Test
-    public void searchShouldReturnApiClientResponse() throws IOException, ParserException {
+    void searchShouldReturnApiClientResponse() throws IOException, ParserException {
         final User user = new User();
         user.setId(12);
         Collection<User> users = new ArrayList<>();
@@ -78,7 +78,7 @@ public class UserServiceImplTests {
     }
 
     @Test
-    public void searchShouldReturnNullWhenApiClientThrowsException() throws IOException, ParserException {
+    void searchShouldReturnNullWhenApiClientThrowsException() throws IOException, ParserException {
         when(apiClient.getAll()).thenThrow(new IOException());
 
         Collection result = service.search();

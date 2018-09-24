@@ -26,12 +26,12 @@ public class DefaultAuthorizationHandler implements AuthorizationHandler {
     }
 
     @Override
-    public void authorize(Request request, Response response) {
+    public Integer authorize(Request request, Response response) {
         String callerValue = request.headers(callerHeader);
 
         if (callerValue == null || callerValue.isEmpty()) {
             setResponseError(String.format("The %s header is required", callerHeader));
-            return;
+            return null;
         }
 
         int callerId;
@@ -39,14 +39,17 @@ public class DefaultAuthorizationHandler implements AuthorizationHandler {
             callerId = Integer.parseInt(callerValue);
         } catch (NumberFormatException e) {
             setResponseError(String.format("The %s header must have a numeric value", callerHeader));
-            return;
+            return null;
         }
 
         User user = getUser(callerId);
 
         if (user == null) {
             setResponseError(String.format("The user with identifier %d doesn't have access to the application", callerId));
+            return null;
         }
+
+        return user.getId();
     }
 
     private User getUser(int id) {

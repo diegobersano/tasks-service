@@ -7,29 +7,32 @@ import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.validators.ValidationResult;
 import org.apache.http.HttpStatus;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class CreateTaskControllerTests extends BaseTaskControllerTest {
+class CreateTaskControllerTests extends BaseTaskControllerTest {
     private final int taskId = 98;
+    private final int creatorId = 42;
     private final String parsedResponse = "parsedCreatedTaskResponse";
 
     private TaskRequest taskRequest;
     private TaskResponse taskResponse;
 
-    @Before
-    public void setup() throws ParserException {
+    @BeforeEach
+    void setup() throws ParserException {
         taskRequest = new TaskRequest();
         taskRequest.setName("Name");
 
         when(parser.parseToObject(any(), eq(TaskRequest.class))).thenReturn(taskRequest);
+        tasksController.setCurrentUser(creatorId);
     }
 
     @Test
-    public void createShouldThrowBadRequestExceptionWhenValidatorReturnsErrors() {
+    void createShouldThrowBadRequestExceptionWhenValidatorReturnsErrors() {
         setupValidationErrorsExecution();
 
         BadRequestApiException badRequestApiException = assertThrows(BadRequestApiException.class, () -> tasksController.createTask.handle(request, response));
@@ -41,7 +44,7 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void createShouldNotCallCreateServiceWhenValidatorReturnsErrors() {
+    void createShouldNotCallCreateServiceWhenValidatorReturnsErrors() {
         setupValidationErrorsExecution();
 
         assertThrows(Exception.class, () -> tasksController.createTask.handle(request, response));
@@ -50,7 +53,7 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void createShouldReturnCreatedResponseWhenValidationsArePassed() throws Exception {
+    void createShouldReturnCreatedResponseWhenValidationsArePassed() throws Exception {
         setupSuccessServiceExecution();
         tasksController.createTask.handle(request, response);
 
@@ -59,7 +62,7 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    public void createShouldCallServiceAndReturnCreatedEntity() throws Exception {
+    void createShouldCallServiceAndReturnCreatedEntity() throws Exception {
         setupSuccessServiceExecution();
 
         String result = (String) tasksController.createTask.handle(request, response);
@@ -68,6 +71,17 @@ public class CreateTaskControllerTests extends BaseTaskControllerTest {
 
         verify(taskService, times(1)).create(taskRequest);
         verify(parser, times(1)).parseToString(taskResponse);
+    }
+
+    @Test
+    void createShouldCallServiceWithCurrentUserId() throws Exception {
+        setupSuccessServiceExecution();
+
+        ArgumentCaptor<TaskRequest> argumentCaptor = ArgumentCaptor.forClass(TaskRequest.class);
+        tasksController.createTask.handle(request, response);
+        verify(taskService).create(argumentCaptor.capture());
+
+        assertEquals(creatorId, argumentCaptor.getValue().getCurrentUserId());
     }
 
     private void setupSuccessServiceExecution() throws ParserException {

@@ -1,5 +1,7 @@
 package com.grupokinexo.tasksservice.models.responses;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.OffsetDateTime;
 
 public class TaskResponse {
@@ -10,6 +12,9 @@ public class TaskResponse {
     private String description;
 
     private OffsetDateTime createdOn;
+
+    @JsonIgnore
+    private int creatorId;
 
     public int getId() {
         return id;
@@ -41,5 +46,13 @@ public class TaskResponse {
 
     public void setCreatedOn(OffsetDateTime createdOn) {
         this.createdOn = createdOn;
+    }
+
+    public int getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(int creatorId) {
+        this.creatorId = creatorId;
     }
 }

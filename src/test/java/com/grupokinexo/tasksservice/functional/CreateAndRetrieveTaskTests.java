@@ -16,44 +16,44 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import spark.Spark;
 
 import java.io.IOException;
 
 import static com.nitorcreations.Matchers.reflectEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class CreateAndRetrieveTaskTests {
+class CreateAndRetrieveTaskTests {
     private static int PORT = 4567;
     private String baseUrl = "http://localhost:" + PORT + "/api";
 
     private Parser parser;
 
-    @BeforeClass
-    public static void setupClass() {
+    @BeforeAll
+    static void setupClass() {
         Main.main(null);
 
         Spark.awaitInitialization();
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @AfterAll
+    static void tearDown() {
         Spark.stop();
     }
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         parser = BeanHelper.getBean("parser", JacksonJsonParser.class);
     }
 
     @Test
-    public void createShouldReturnCreatedResponse() throws IOException, ParserException {
+    void createShouldReturnCreatedResponse() throws IOException, ParserException {
         HttpResponse createdResponse = createTask();
         assertNotNull(createdResponse);
         assertEquals(HttpStatus.SC_CREATED, createdResponse.getStatusLine().getStatusCode());
@@ -70,7 +70,7 @@ public class CreateAndRetrieveTaskTests {
     }
 
     @Test
-    public void getShouldReturnNotFoundWhenTaskDoesNotExists() {
+    void getShouldReturnNotFoundWhenTaskDoesNotExists() {
         HttpResponse response = getTaskById(99);
 
         assertNotNull(response);
