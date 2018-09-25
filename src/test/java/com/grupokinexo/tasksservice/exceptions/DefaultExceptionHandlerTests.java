@@ -45,4 +45,22 @@ class DefaultExceptionHandlerTests {
         verify(response, times(1)).status(HttpStatus.SC_FORBIDDEN);
         verify(response, times(1)).body(parsedResponse);
     }
+
+    @Test
+    void manageExceptionShouldReturnConflictResponseWhenExceptionTypeIsConflictException() {
+        ConflictException exception = new ConflictException("Error message");
+        exceptionHandler.manageException(exception, request, response);
+
+        verify(response, times(1)).status(HttpStatus.SC_CONFLICT);
+        verify(response, times(1)).body(parsedResponse);
+    }
+
+    @Test
+    void manageExceptionShouldReturnNotFoundResponseWhenExceptionTypeIsNotFoundException() {
+        NotFoundException exception = new NotFoundException("Error message");
+        exceptionHandler.manageException(exception, request, response);
+
+        verify(response, times(1)).status(HttpStatus.SC_NOT_FOUND);
+        verify(response, times(1)).body(parsedResponse);
+    }
 }

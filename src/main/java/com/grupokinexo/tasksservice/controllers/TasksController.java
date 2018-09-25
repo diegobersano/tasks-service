@@ -1,12 +1,8 @@
 package com.grupokinexo.tasksservice.controllers;
 
-import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
-import com.grupokinexo.tasksservice.exceptions.ConflictException;
-import com.grupokinexo.tasksservice.exceptions.ParserException;
-import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
+import com.grupokinexo.tasksservice.exceptions.*;
 import com.grupokinexo.tasksservice.models.requests.ShareTaskRequest;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
-import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.parsers.Parser;
@@ -56,15 +52,13 @@ public class TasksController implements BaseController {
         return parser.parseToString(result);
     }
 
-    private String getById(Request request, Response response) throws ParserException, BadRequestApiException, UnauthorizedException {
+    private String getById(Request request, Response response) throws ParserException, BadRequestApiException, UnauthorizedException, NotFoundException {
         int taskId = getTaskIdByRoute(request);
 
         TaskResponse task = taskService.getById(taskId);
 
         if (task == null) {
-            // TODO dbersano > Modificar por NotFoundException
-            response.status(HttpStatus.SC_NOT_FOUND);
-            return parser.parseToString(new ErrorDetail());
+            throw new NotFoundException(String.format("The task with the identifier %d doesn't exists", taskId));
         }
 
         if (task.getCreatorId() != currentUserId) {

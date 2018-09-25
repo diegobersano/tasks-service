@@ -37,6 +37,13 @@ public class DefaultExceptionHandler implements ExceptionHandler {
             setResponseBody(response, errorDetail);
 
             response.status(HttpStatus.SC_CONFLICT);
+        } else if (exception instanceof NotFoundException) {
+            NotFoundException notFoundException = (NotFoundException) exception;
+            ErrorDetail errorDetail = new ErrorDetail(notFoundException.getMessage());
+
+            setResponseBody(response, errorDetail);
+
+            response.status(HttpStatus.SC_NOT_FOUND);
         }
     }
 
