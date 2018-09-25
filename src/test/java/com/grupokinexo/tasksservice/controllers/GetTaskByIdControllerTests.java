@@ -1,9 +1,9 @@
 package com.grupokinexo.tasksservice.controllers;
 
 import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
+import com.grupokinexo.tasksservice.exceptions.NotFoundException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
-import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,26 +45,9 @@ class GetTaskByIdControllerTests extends BaseTaskControllerTest {
     }
 
     @Test
-    void getShouldReturnNotFoundResponseWhenTaskDoesNotExist() throws Exception {
+    void getShouldThrowNotFoundExceptionWhenTaskDoesNotExist() {
         setupNotFoundServiceExecution();
-        tasksController.getById.handle(request, response);
-
-        verify(response, times(1)).status(HttpStatus.SC_NOT_FOUND);
-    }
-
-    @Test
-    void getShouldReturnErrorResponseWhenTaskDoesNotExists() throws Exception {
-        final String errorMessage = "errorMessage";
-
-        setupNotFoundServiceExecution();
-        when(parser.parseToString(any(ErrorDetail.class))).thenReturn(errorMessage);
-
-        String result = (String) tasksController.getById.handle(request, response);
-
-        assertEquals(result, errorMessage);
-
-        verify(taskService, times(1)).getById(1);
-        verify(parser, times(1)).parseToString(any(ErrorDetail.class));
+        assertThrows(NotFoundException.class, () -> tasksController.getById.handle(request, response));
     }
 
     @Test
