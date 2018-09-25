@@ -1,8 +1,10 @@
 package com.grupokinexo.tasksservice.controllers;
 
 import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
+import com.grupokinexo.tasksservice.exceptions.ConflictException;
 import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.exceptions.UnauthorizedException;
+import com.grupokinexo.tasksservice.models.requests.ShareTaskRequest;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
 import com.grupokinexo.tasksservice.models.responses.ErrorDetail;
 import com.grupokinexo.tasksservice.models.responses.ErrorElement;
@@ -16,6 +18,9 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class TasksController implements BaseController {
@@ -34,6 +39,16 @@ public class TasksController implements BaseController {
     public Route getById = this::getById;
     public Route createTask = this::createTask;
     public Route editTask = this::editTask;
+    public Route shareTask = this::shareTask;
+    public Route getUsersByTask = this::getUsersByTask;
+
+    private String getUsersByTask(Request request, Response response) throws BadRequestApiException, ParserException {
+        int taskId = getTaskIdByRoute(request);
+
+        Collection users = taskService.getUsersByTask(taskId);
+        response.status(HttpStatus.SC_OK);
+        return parser.parseToString(users);
+    }
 
     private String getTask() throws ParserException {
         List<TaskResponse> result = taskService.search();
@@ -47,6 +62,7 @@ public class TasksController implements BaseController {
         TaskResponse task = taskService.getById(taskId);
 
         if (task == null) {
+            // TODO dbersano > Modificar por NotFoundException
             response.status(HttpStatus.SC_NOT_FOUND);
             return parser.parseToString(new ErrorDetail());
         }
@@ -86,20 +102,36 @@ public class TasksController implements BaseController {
             throw new BadRequestApiException(validationResult);
         }
 
-        TaskResponse existingTask = taskService.getById(taskId);
-
-        if (existingTask == null) {
-            throw new BadRequestApiException(new ErrorElement("id", "There is not a task with the identifier"));
-        }
-
-        if (existingTask.getCreatorId() != currentUserId) {
-            throw new UnauthorizedException("The user is not the owner of the task");
-        }
+        TaskResponse existingTask = getAndValidateTask(taskId);
 
         taskRequest.setCurrentUserId(currentUserId);
         TaskResponse taskResponse = taskService.edit(existingTask.getId(), taskRequest);
         response.status(HttpStatus.SC_OK);
         return parser.parseToString(taskResponse);
+    }
+
+    private String shareTask(Request request, Response response) throws ParserException, BadRequestApiException, IOException, UnauthorizedException, ConflictException {
+        int taskId = getTaskIdByRoute(request);
+        ShareTaskRequest shareTaskRequest = parser.parseToObject(request.body(), ShareTaskRequest.class);
+
+        ValidationResult validationResult = validator.validate(shareTaskRequest);
+        if (!validationResult.isValid()) {
+            throw new BadRequestApiException(validationResult);
+        }
+
+        TaskResponse existingTask = getAndValidateTask(taskId);
+
+        if (Arrays.stream(shareTaskRequest.getUserIds()).anyMatch(x -> x == existingTask.getCreatorId())) {
+            throw new ConflictException("The task can't be shared with its owner");
+        }
+
+        taskService.shareTask(taskId, shareTaskRequest);
+
+        response.status(HttpStatus.SC_OK);
+
+        Collection users = taskService.getUsersByTask(taskId);
+
+        return parser.parseToString(users);
     }
 
     private int getTaskIdByRoute(Request request) throws BadRequestApiException {
@@ -108,6 +140,20 @@ public class TasksController implements BaseController {
         } catch (NumberFormatException e) {
             throw new BadRequestApiException(new ErrorElement("id", "The format of the task identifier is not valid"));
         }
+    }
+
+    private TaskResponse getAndValidateTask(int taskId) throws BadRequestApiException, UnauthorizedException {
+        TaskResponse task = taskService.getById(taskId);
+
+        if (task == null) {
+            throw new BadRequestApiException(new ErrorElement("id", "There is not a task with the identifier"));
+        }
+
+        if (task.getCreatorId() != currentUserId) {
+            throw new UnauthorizedException("The user is not the owner of the task");
+        }
+
+        return task;
     }
 
     @Override

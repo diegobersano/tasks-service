@@ -1,18 +1,32 @@
 package com.grupokinexo.tasksservice.services;
 
+import com.grupokinexo.tasksservice.clients.UsersApiClient;
+import com.grupokinexo.tasksservice.exceptions.BadRequestApiException;
+import com.grupokinexo.tasksservice.exceptions.ParserException;
 import com.grupokinexo.tasksservice.models.domain.Task;
+import com.grupokinexo.tasksservice.models.domain.UserTask;
+import com.grupokinexo.tasksservice.models.external.User;
+import com.grupokinexo.tasksservice.models.requests.ShareTaskRequest;
 import com.grupokinexo.tasksservice.models.requests.TaskRequest;
+import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.repositories.TaskRepository;
+import com.grupokinexo.tasksservice.repositories.UserTaskRepository;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
+    private final UserTaskRepository userTaskRepository;
+    private final UsersApiClient usersApiClient;
 
-    public TaskServiceImpl(TaskRepository taskRepository) {
+    public TaskServiceImpl(TaskRepository taskRepository, UserTaskRepository userTaskRepository, UsersApiClient usersApiClient) {
         this.taskRepository = taskRepository;
+        this.userTaskRepository = userTaskRepository;
+        this.usersApiClient = usersApiClient;
     }
 
     @Override
@@ -57,6 +71,46 @@ public class TaskServiceImpl implements TaskService {
         taskRepository.update(taskToEdit);
 
         return getById(id);
+    }
+
+    @Override
+    public void shareTask(int id, ShareTaskRequest shareTaskRequest) throws IOException, ParserException, BadRequestApiException {
+        Collection<Integer> userIds = new ArrayList<>();
+
+        if (shareTaskRequest.getUserIds() != null) {
+            for (int userId : shareTaskRequest.getUserIds()) {
+                User validUser = usersApiClient.getById(userId);
+
+                if (validUser == null) {
+                    throw new BadRequestApiException(new ErrorElement("", ""));
+                }
+
+                userIds.add(userId);
+            }
+        }
+
+        userTaskRepository.addToTask(id, userIds);
+    }
+
+    @Override
+    public Collection<User> getUsersByTask(int id) {
+        Collection<UserTask> usersByTask = userTaskRepository.getByTaskId(id);
+        Collection<User> users = new ArrayList<>();
+
+        usersByTask.forEach(userTask -> {
+            User user = null;
+            try {
+                user = usersApiClient.getById(userTask.getUserId());
+            } catch (IOException | ParserException e) {
+                e.printStackTrace();
+            }
+
+            if (user != null) {
+                users.add(user);
+            }
+        });
+
+        return users;
     }
 
     private TaskResponse Map(Task task) {
