@@ -30,6 +30,13 @@ public class DefaultExceptionHandler implements ExceptionHandler {
             setResponseBody(response, errorDetail);
 
             response.status(HttpStatus.SC_FORBIDDEN);
+        } else if (exception instanceof ConflictException) {
+            ConflictException conflictException = (ConflictException) exception;
+            ErrorDetail errorDetail = new ErrorDetail(conflictException.getMessage());
+
+            setResponseBody(response, errorDetail);
+
+            response.status(HttpStatus.SC_CONFLICT);
         }
     }
 

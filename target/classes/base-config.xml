@@ -41,6 +41,8 @@
     <!-- Services -->
     <bean id="taskService" class="com.grupokinexo.tasksservice.services.TaskServiceImpl">
         <constructor-arg ref="taskRepository"/>
+        <constructor-arg ref="userTaskRepository"/>
+        <constructor-arg ref="usersApiClient"/>
     </bean>
     <bean id="userService" class="com.grupokinexo.tasksservice.services.UserServiceImpl">
         <constructor-arg ref="usersApiClient"/>
@@ -49,6 +51,10 @@
     <!-- Repositories -->
     <bean id="taskRepository" class="com.grupokinexo.tasksservice.repositories.TaskRepositoryImpl">
         <constructor-arg ref="sessionFactory"/>
+    </bean>
+    <bean id="userTaskRepository" class="com.grupokinexo.tasksservice.repositories.UserTaskRepositoryImpl">
+        <constructor-arg ref="sessionFactory"/>
+        <constructor-arg ref="taskRepository"/>
     </bean>
 
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
@@ -66,6 +72,7 @@
         <property name="annotatedClasses">
             <list>
                 <value>com.grupokinexo.tasksservice.models.domain.Task</value>
+                <value>com.grupokinexo.tasksservice.models.domain.UserTask</value>
             </list>
         </property>
         <property name="hibernateProperties">

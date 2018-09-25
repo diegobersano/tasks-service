@@ -3,6 +3,8 @@ package com.grupokinexo.tasksservice.models.domain;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 @Table(name = "Tasks")
@@ -27,6 +29,10 @@ public class Task {
     @NotNull
     @Column(name = "CreatorId")
     private int creatorId;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "TaskId")
+    private Collection<UserTask> users = new ArrayList<>();
 
     public int getId() {
         return id;
@@ -66,5 +72,13 @@ public class Task {
 
     public void setCreatorId(int creatorId) {
         this.creatorId = creatorId;
+    }
+
+    public Collection<UserTask> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Collection<UserTask> users) {
+        this.users = users;
     }
 }
