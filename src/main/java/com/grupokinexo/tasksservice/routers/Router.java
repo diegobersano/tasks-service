@@ -28,6 +28,8 @@ public class Router implements SparkApplication {
             Spark.get("/:id", tasksController.getById);
             Spark.post("", tasksController.createTask);
             Spark.put("/:id", tasksController.editTask);
+            Spark.post("/:id", tasksController.shareTask);
+            Spark.get("/:id/users", tasksController.getUsersByTask);
         });
 
         Spark.exception(Exception.class, exceptionHandler::manageException);
