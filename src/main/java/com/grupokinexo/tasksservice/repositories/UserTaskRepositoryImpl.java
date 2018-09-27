@@ -5,10 +5,12 @@ import com.grupokinexo.tasksservice.models.domain.UserTask;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+@Repository
 public class UserTaskRepositoryImpl implements UserTaskRepository {
     private final SessionFactory sessionFactory;
     private final TaskRepository taskRepository;
@@ -62,7 +64,7 @@ public class UserTaskRepositoryImpl implements UserTaskRepository {
         }
 
         for (UserTask userTask : toAdd) {
-            session.persist(userTask);
+            session.save(userTask);
         }
 
         transaction.commit();
