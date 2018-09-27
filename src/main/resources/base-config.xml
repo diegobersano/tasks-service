@@ -7,8 +7,9 @@
 
     <context:component-scan base-package="com.grupokinexo.tasksservice"/>
 
-    <context:property-placeholder location="classpath:application.properties"
-                                  ignore-unresolvable="true" ignore-resource-not-found="true"/>
+    <context:property-placeholder location="classpath:application.properties,
+                                            classpath:database.properties"
+                                  ignore-unresolvable="true"/>
 
     <!-- Controllers -->
     <bean id="tasksController"
@@ -57,15 +58,14 @@
         <constructor-arg ref="taskRepository"/>
     </bean>
 
+    <!-- Database -->
     <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
           destroy-method="close">
-        <property name="driverClassName" value="org.h2.Driver"/>
-        <property name="url" value="jdbc:h2:mem:db;DB_CLOSE_DELAY=-1"/>
-        <property name="username" value="sa"/>
-        <property name="password" value="sa"/>
+        <property name="driverClassName" value="${db.driver}"/>
+        <property name="url" value="${db.url}"/>
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
     </bean>
-
-    <!-- Hibernate 5 SessionFactory Bean definition -->
     <bean id="sessionFactory"
           class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
         <property name="dataSource" ref="dataSource"/>
@@ -77,9 +77,9 @@
         </property>
         <property name="hibernateProperties">
             <props>
-                <prop key="hibernate.dialect">org.hibernate.dialect.H2Dialect</prop>
+                <prop key="hibernate.dialect">${db.dialect}</prop>
                 <prop key="hibernate.current_session_context_class">thread</prop>
-                <prop key="hibernate.hbm2ddl.auto">create-drop</prop>
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
                 <prop key="hibernate.show_sql">true</prop>
             </props>
         </property>
