@@ -12,12 +12,14 @@ import com.grupokinexo.tasksservice.models.responses.ErrorElement;
 import com.grupokinexo.tasksservice.models.responses.TaskResponse;
 import com.grupokinexo.tasksservice.repositories.TaskRepository;
 import com.grupokinexo.tasksservice.repositories.UserTaskRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Transactional
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserTaskRepository userTaskRepository;
