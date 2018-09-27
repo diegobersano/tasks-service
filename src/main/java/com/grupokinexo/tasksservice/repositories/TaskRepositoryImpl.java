@@ -10,12 +10,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@Transactional
 @Repository
 public class TaskRepositoryImpl implements TaskRepository {
     private final SessionFactory sessionFactory;
@@ -28,11 +26,7 @@ public class TaskRepositoryImpl implements TaskRepository {
     public int add(Task object) {
         object.setCreatedOn(OffsetDateTime.now());
         Session session = sessionFactory.openSession();
-
-        Transaction tx = session.beginTransaction();
         session.save(object);
-        tx.commit();
-
         session.close();
 
         return object.getId();
@@ -58,10 +52,11 @@ public class TaskRepositoryImpl implements TaskRepository {
     @Override
     public void update(Task object) {
         Session session = sessionFactory.openSession();
-        Transaction tx = session.beginTransaction();
+        Transaction transaction = session.beginTransaction();
 
         session.update(object);
-        tx.commit();
+
+        transaction.commit();
         session.close();
     }
 
